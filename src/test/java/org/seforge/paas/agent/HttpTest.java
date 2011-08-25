@@ -1,18 +1,16 @@
 package org.seforge.paas.agent;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import javax.management.ObjectName;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
+
 
 public class HttpTest {
 
@@ -21,7 +19,7 @@ public class HttpTest {
 		try {
 			String strURL = "http://localhost:8080/PaaSMonitor/appservers";
 			HttpPost httppost = new HttpPost(strURL);
-			String content = "{'name':'appserver','ip':'127.0.0.2','jmxPort':8999}";
+			String content = HttpTest.getAppServerInfo();
 			StringEntity requestEntity = new StringEntity(content, "UTF-8");
 			
 			httppost.setEntity(requestEntity);
@@ -29,18 +27,38 @@ public class HttpTest {
 			
 			ResponseHandler<String> responseHandler = new BasicResponseHandler();
 			String responseBody = httpclient.execute(httppost, responseHandler);
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			// When HttpClient instance is no longer needed,
-			// shut down the connection manager to ensure
-			// immediate deallocation of all system resources
+			System.out.println(responseBody);
+		} catch (Exception e) {			
+			e.printStackTrace();		
+		} finally {			
 			httpclient.getConnectionManager().shutdown();
 		}
 
+	}
+	
+	public static String getAppServerInfo() throws Exception{
+//		String port = System.getProperty("com.sun.management.jmxremote.port");	
+		ObjectName objectName = new ObjectName("java.lang:type=Runtime");
+		String name = (String)ManagementFactory.getPlatformMBeanServer().getAttribute(objectName, "VmVendor");
+
+		
+		
+		String port = "8999";
+		InetAddress local;		
+			local = InetAddress.getLocalHost();
+			String ip = local.getHostAddress();
+			StringBuilder sb = new StringBuilder();
+			sb.append("{'name':'");
+			sb.append(name);
+			sb.append("','ip':'");
+			sb.append(ip);
+			sb.append("','jmxPort':");
+			sb.append(port);
+			sb.append("}");
+			return sb.toString();
+			
+			
+			
+		
 	}
 }
