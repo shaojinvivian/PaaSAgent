@@ -113,6 +113,8 @@ public class StartupListener implements LifecycleListener {
 			StringBuilder sb = new StringBuilder();
 			sb.append("{'name':'");
 			sb.append(name);
+			sb.append("@");
+			sb.append(ip);
 			sb.append("','ip':'");
 			sb.append(ip);
 			sb.append("','jmxPort':");
