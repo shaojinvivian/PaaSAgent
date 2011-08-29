@@ -32,7 +32,7 @@ public class StartupListener implements LifecycleListener {
 		Lifecycle lifecycle = event.getLifecycle();
 		if (lifecycle instanceof Server) {
 			Server server = (Server) lifecycle;
-			if (event.getType().equals(Lifecycle.START_EVENT)) {
+			if (event.getType().equals(Lifecycle.AFTER_START_EVENT)) {
 				Service catalina = server.findService("Catalina");
 				Container container = catalina.getContainer();
 				if (container instanceof StandardEngine) {
