@@ -117,9 +117,9 @@ public class StartupListener implements LifecycleListener {
 			sb.append(ip);
 			sb.append("','ip':'");
 			sb.append(ip);
-			sb.append("','jmxPort':");
+			sb.append("','jmxPort':'");
 			sb.append(port);
-			sb.append(",'isMonitee':false}");			
+			sb.append("','isMonitee':false}");			
 			info = sb.toString();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
