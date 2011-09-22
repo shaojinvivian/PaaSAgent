@@ -54,7 +54,7 @@ public class JMXFilterInitServlet extends HttpServlet {
     
     private static MBeanServer mServer = null;
 
-    private static final String DOMAIN = "hyperic-hq";
+    private static final String DOMAIN = "PaaSMonitor";
     private static final String WEB_TMP = File.separator + "tmp";
 
     private String debug = null;
