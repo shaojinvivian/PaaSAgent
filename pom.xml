@@ -15,6 +15,11 @@
 			<artifactId>httpclient</artifactId>
 			<version>4.1.2</version>
 		</dependency>
+		<dependency>
+			<groupId>mx4j</groupId>
+			<artifactId>mx4j-jmx</artifactId>
+			<version>1.1.1</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -40,6 +45,7 @@
 									<include>org.apache.httpcomponents:httpcore</include>
 									<include>commons-logging:commons-logging</include>
 									<include>commons-codec:commons-codec</include>
+									<include>mx4j:mx4j-jmx</include>
 								</includes>
 							</artifactSet>
 						</configuration>
