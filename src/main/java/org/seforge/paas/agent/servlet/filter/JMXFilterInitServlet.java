@@ -209,6 +209,7 @@ public class JMXFilterInitServlet extends HttpServlet {
             // Extract the doc name from the context path
             String docBase = ctx.getRealPath(File.separator);
             String contextName = getName(ctx);
+           
 
             if (contextName == null) {
                 log("Unable to determine name for context " + ctx +
@@ -220,14 +221,16 @@ public class JMXFilterInitServlet extends HttpServlet {
                 log("No filter for context " + contextName );
                 return;
             }
-
+            /*	
             if (contextName.endsWith("ROOT")) {
                 return; //XXX Available == 0??
             }
+            */
             ContextInfo contextInfo = filter.getJMXContextInfo();
             
             contextInfo.setDocBase(docBase);
             contextInfo.setContextName(contextName);
+            contextInfo.setDisplayName(ctx.getServletContextName());
             
             ClassLoader cl=Thread.currentThread().getContextClassLoader();
 

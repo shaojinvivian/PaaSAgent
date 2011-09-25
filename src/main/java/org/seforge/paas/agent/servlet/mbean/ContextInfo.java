@@ -39,6 +39,7 @@ public final class ContextInfo implements ContextInfoMBean {
     
     private String contextName;
     private String docBase;
+    private String displayName;
 
     private JMXSessionListener sessionListener;
     
@@ -54,6 +55,7 @@ public final class ContextInfo implements ContextInfoMBean {
 
     // RT variables
     private String responseTimeLogDir = null;
+    private String errorLogDir = null;
     
     // If we are created, then the context has started
     private int available=1;
@@ -195,4 +197,23 @@ public final class ContextInfo implements ContextInfoMBean {
     public void setResponseTimeLogDir(String logDir) {
         this.responseTimeLogDir = logDir;
     }
+    
+    /**
+     * @jmx:managed-attribute
+     */
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
+	public String getErrorLogDir() {
+		return errorLogDir;
+	}
+
+	public void setErrorLogDir(String errorLogDir) {
+		this.errorLogDir = errorLogDir;
+	}
 }

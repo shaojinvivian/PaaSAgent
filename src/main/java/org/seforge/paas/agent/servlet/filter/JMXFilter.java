@@ -29,7 +29,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 
 import javax.servlet.Filter;
@@ -56,6 +60,10 @@ public final class JMXFilter implements Filter {
     private BufferedWriter logwriter;
     private RandomAccessFile logfile;
     private boolean logToDisk = false;
+    
+    private BufferedWriter errorLogWriter;
+    private RandomAccessFile errorLogFile;
+    private boolean errorLogToDisk = false;
     
     private HashMap servlets = new HashMap();
     
@@ -247,8 +255,45 @@ public final class JMXFilter implements Filter {
                                                     lastIndexOf("\\") + 1);
             }
             this.setLogWriter(rtLogDir + File.separator + 
-                              safeCtxName + "_HQResponseTime.log");
+                              safeCtxName + "_PaaSMonitorRT.log");
         }
+        
+        String errorLogDir = filterConfig.getInitParameter("errorLogDir");
+
+        if(errorLogDir == null) {
+            filterConfig.getServletContext().log("No errorLogDir " +
+                                                 "parameter specified. " +
+                                                 "Error logging " +
+                                                 "will not be enabled.");
+        } else {
+            // allow the use of system properties in the initParameter
+            // not sure how spec-friendly this is, but it is handy as hell
+            if (errorLogDir.startsWith("$")) {
+                String sysKey = errorLogDir.substring(errorLogDir.indexOf("{") +1, 
+                		errorLogDir.lastIndexOf("}"));
+                
+                String sysProp = System.getProperty(sysKey);
+                if(sysProp != null) {
+                	errorLogDir = replace(errorLogDir, 
+                                       "${" + sysKey + "}",
+                                       sysProp);
+                }
+            }
+
+            // Make the log dir available through JMX
+            jmxContextInfo.setErrorLogDir(errorLogDir);
+
+            // the context name gets prepended with a // infront of it, 
+            // trim that out unfortunately, jmx likes it that way
+            String safeCtxName = contextName;
+            if(contextName.startsWith("\\")) {
+                safeCtxName = contextName.substring(contextName.
+                                                    lastIndexOf("\\") + 1);
+            }
+            this.setErrorLogWriter(errorLogDir + File.separator + 
+                              safeCtxName + "_PaaSMonitorError.log");
+        }
+
 
         String bufTime  = filterConfig.getInitParameter("bufferTime");
         if(bufTime == null) {
@@ -303,6 +348,35 @@ public final class JMXFilter implements Filter {
         }
     }
     
+    
+    private void setErrorLogWriter(String filename) {
+        // Handle context reloads.
+        if (this.errorLogWriter != null) {
+            try {
+                filterConfig.getServletContext().
+                    log("Closing Error log: " + filename);
+                this.errorLogWriter.flush();
+                this.errorLogWriter.close();
+            } catch (IOException ignore) {
+            }
+        }
+
+    	try {
+    		errorLogWriter = new BufferedWriter(new FileWriter(filename, true));
+            errorLogFile   = new RandomAccessFile(filename, "rw");
+            errorLogToDisk = true;
+            filterConfig.getServletContext().log("Opening Error " +
+                                                 "log: " + filename);
+        } catch (IOException e) {
+            filterConfig.getServletContext().log("Could not open " +
+                                                 "Error log: " + 
+                                                 filename + " " +
+                                                "Please verify that the path " +
+                                                "exists and is writable by " +
+                                                "the user running the container");
+        }
+    }
+    
     public void doFilter (ServletRequest request, ServletResponse response, 
                           FilterChain chain)
         throws IOException, ServletException
@@ -322,6 +396,23 @@ public final class JMXFilter implements Filter {
             chain.doFilter(request, eResponse);
         } catch(Throwable t) {
             error = t;
+            if (errorLogToDisk) {
+            	/*
+                // Before logging check the file size
+                if (errorLogFile.length() > this.maxLength) {
+                    // Truncate.
+                    context.log("Truncating HQ response time log");
+                    errorLogFile.setLength(0);
+                }
+                */
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                StringWriter errorInfo = new StringWriter();             
+                t.printStackTrace(new PrintWriter(errorInfo));                
+                String str = df.format(new Date()) + " " + errorInfo.toString();
+                errorLogWriter.write(str);
+                errorLogWriter.newLine();
+                errorLogWriter.flush();             
+            }
         }
 
         t2 = System.currentTimeMillis();
@@ -432,7 +523,14 @@ public final class JMXFilter implements Filter {
                 this.logwriter.close();
             } catch (IOException ignore) {
             }
-        }                
+        }
+        if (this.errorLogWriter != null) {
+            try {
+                this.errorLogWriter.flush();
+                this.errorLogWriter.close();
+            } catch (IOException ignore) {
+            }
+        }    
         try {
             jmxContextInfo.setAvailable(0);
             if(logwriter != null)

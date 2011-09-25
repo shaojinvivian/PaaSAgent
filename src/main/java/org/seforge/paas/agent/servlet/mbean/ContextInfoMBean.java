@@ -78,6 +78,13 @@ public interface ContextInfoMBean {
 	    /**
 	     * @jmx:managed-attribute
 	     */
-	    public void setResponseTimeLogDir(String logDir);
+//	    public void setResponseTimeLogDir(String logDir);
+	    
+	    /**
+	     * @jmx:managed-attribute
+	     */
+	    public String getDisplayName();
+	    
+	    public String getErrorLogDir();
 
 }
