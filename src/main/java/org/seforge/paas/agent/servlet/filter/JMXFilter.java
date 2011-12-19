@@ -439,10 +439,12 @@ public final class JMXFilter implements Filter {
                     logfile.setLength(0);
                 }
 
-                String ip = hreq.getRemoteAddr();
+                String ip = getIpAddr(hreq);
                 if (ip == null) ip = UNKNOWN_IP;
                 String q = hreq.getQueryString();
-                String str = hreq.getServletPath() + 
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");                              
+                String requestTime = df.format(new Date());
+                String str = requestTime + " " + hreq.getServletPath() + 
                     ((q == null) ? "" : "?" + q) +
                     " " + Long.toString(t1) + " " + 
                     Long.toString(t2 - t1) + " " + 
@@ -547,5 +549,19 @@ public final class JMXFilter implements Filter {
         try{init(f);} catch(Exception e){ e.printStackTrace();}
     }
     public FilterConfig getFilterConfig(){return null;}
+    
+    public String getIpAddr(HttpServletRequest request) {  
+        String ip = request.getHeader("x-forwarded-for");  
+        if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {  
+           ip = request.getHeader("Proxy-Client-IP");  
+       }  
+        if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {  
+           ip = request.getHeader("WL-Proxy-Client-IP");  
+        }  
+       if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {  
+            ip = request.getRemoteAddr();  
+       }  
+       return ip;  
+  }  
 
 }
