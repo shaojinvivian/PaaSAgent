@@ -9,6 +9,7 @@ import java.util.Map;
 public class LogAnalyzer {
 	private String fileName;
 	private static Map<String, Integer> hitNum = new HashMap();
+	private static Map<String, Integer> ipMap = new HashMap();
 	private static ArrayList filteredList = new ArrayList();
 	
 	static{
@@ -29,7 +30,7 @@ public class LogAnalyzer {
             String date = log[0];
             String time = log[1];
             String url = log[2];
-            String[] tokens = url.split(".");
+            String[] tokens = url.split("\\.");
             if(tokens.length>1){
             	String appendix = tokens[1];
                 if(filteredList.contains(appendix)){
@@ -50,8 +51,47 @@ public class LogAnalyzer {
         }  
         for(String s1 : hitNum.keySet()){
         	System.out.println("URL " + s1 + ":" + hitNum.get(s1));
-        }
-       
+        }       
+        br.close();  
+        reader.close();  
+	}
+	
+	
+	public static void parseLogForIpDistribution(String fileName) throws Exception{
+		FileReader reader = new FileReader(fileName);  
+        BufferedReader br = new BufferedReader(reader);  
+        String s = null;  
+        int lineNum = 0;
+        while((s = br.readLine()) != null) {  
+            String[] log = s.split(" ");
+            String url = log[2];
+            String[] tokens = url.split("\\.");
+            if(tokens.length>1){
+            	String appendix = tokens[1];
+                if(filteredList.contains(appendix)){
+                	continue;
+                }
+            }
+            /*
+            String date = log[0];
+            String time = log[1];                       
+            
+            String arriveTime = log[3];
+            String responseTime = log[4];
+            String code = log[5];
+            */
+            String ip = log[6];
+            Integer num = ipMap.get(ip);
+            if(num == null){
+            	ipMap.put(ip, 1);
+            }else{
+            	ipMap.put(ip, num+1);
+            }
+            lineNum++;
+        }  
+        for(String s1 : ipMap.keySet()){
+        	System.out.println("IP " + s1 + ":" + ipMap.get(s1));
+        }       
         br.close();  
         reader.close();  
 	}
@@ -60,8 +100,8 @@ public class LogAnalyzer {
 	public static void main(String[] args) {
 		try {
 			LogAnalyzer.parseLogForHitNum("ROOT_PaaSMonitorRT.log");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			LogAnalyzer.parseLogForIpDistribution("ROOT_PaaSMonitorRT.log");
+		} catch (Exception e) {			
 			e.printStackTrace();
 		}
 	}
