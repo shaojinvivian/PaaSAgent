@@ -21,12 +21,14 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.seforge.paas.agent.utils.Util;
 
 public class StartupListener implements LifecycleListener {
 
 	private String monitorUrl = null;
 
-	private static final String MONITOR_FILE = "monitor.properties";	
+	//监测中心的地址 配置在PaaSAgentWeb应用的WEB-INF目录中
+	private static final String MONITOR_FILE = "webapps\\PaaSAgentWeb\\WEB-INF\\monitor.properties";	
 
 	public void lifecycleEvent(LifecycleEvent event) {
 		Lifecycle lifecycle = event.getLifecycle();
@@ -39,7 +41,7 @@ public class StartupListener implements LifecycleListener {
 					StandardEngine engine = (StandardEngine) container;
 					File monitorFile = new File(engine.getBaseDir(),
 							MONITOR_FILE);					
-					monitorUrl = prepareUrl(monitorFile);
+					monitorUrl = (Util.retrieveProperties(monitorFile)).getProperty("url");
 					if (monitorUrl != null) {
 						HttpClient httpclient = new DefaultHttpClient();
 						try {
@@ -77,26 +79,7 @@ public class StartupListener implements LifecycleListener {
 		}
 	}
 
-	public String prepareUrl(File file) {
-		String url = null;
-		FileInputStream is;
-		try {
-			Properties properties = new Properties();
-			is = new FileInputStream(file);
-			properties.load(is);
-			if (properties.containsKey("url")) {
-				url = properties.getProperty("url");
-			}
-			is.close();
-		} catch (FileNotFoundException e) {
-			System.out.println("Cannot find monitor configuration file!");
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return url;
-	}
+	
 
 	public static String getAppServerInfo() {
 		String info = null;
